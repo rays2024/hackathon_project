@@ -2,8 +2,8 @@ import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import * as Token from "@solana/spl-token";
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { IDL } from "../../target/types/token_pool";
 import { PROGRAM_TOKEN_SEED, REWARDS_TOKEN_SEED } from "../const";
+import { IDL } from "./types/token_pool";
 import * as util from "./util";
 
 // const network = 'https://api.devnet.solana.com'

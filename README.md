@@ -88,6 +88,26 @@ hackathon_project/
 
 ## 🛠️ Quick Start
 
+### Just Run the Test Cases
+
+```bash
+
+# if we just need to run the ts script without care about the contract deployments, we can just see below sections. and ignore the remaining sections.
+# Install Node.js dependencies
+yarn install
+
+# Run tests
+# initialize the smart contract
+npm run test:step1 
+# user stake amount into smart contract
+npm run test:step2
+# user withdraw amount from smart contract
+npm run test:step3
+# user claim amount from smart contract
+npm run test:step4
+
+```
+
 ### 1. Install Dependencies
 
 ```bash
@@ -97,8 +117,6 @@ cargo install
 # Install Node.js dependencies
 yarn install
 
-# Install frontend dependencies
-cd frontend && npm install
 ```
 
 ### 2. Environment Setup
@@ -118,18 +136,15 @@ cargo install --git https://github.com/coral-xyz/anchor --tag v0.29.0 anchor-cli
 # Build smart contracts
 anchor build
 
-# Start frontend development server
-cd frontend && npm run dev
 ```
 
 ### 4. Deploy Contract
 
 ```bash
+
 # Deploy to testnet
 anchor deploy
 
-# Run tests
-anchor test
 ```
 
 ## 📖 Usage Guide

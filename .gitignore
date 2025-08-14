@@ -7,4 +7,3 @@ node_modules
 test-ledger
 .yarn
 temp/
-key_pair/
