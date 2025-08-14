@@ -9,13 +9,13 @@ pub mod instructions;
 pub mod state;
 
 #[cfg(feature = "localnet")]
-declare_id!("2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU");
+declare_id!("3JMqhHBkh9vFciBjzMAy9x3ksyKnSC2UbTbQr4atkVBo");
 #[cfg(feature = "devnet")]
-declare_id!("2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU");
+declare_id!("3JMqhHBkh9vFciBjzMAy9x3ksyKnSC2UbTbQr4atkVBo");
 #[cfg(feature = "testnet")]
-declare_id!("2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU");
+declare_id!("3JMqhHBkh9vFciBjzMAy9x3ksyKnSC2UbTbQr4atkVBo");
 #[cfg(feature = "mainnet")]
-declare_id!("2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU");
+declare_id!("3JMqhHBkh9vFciBjzMAy9x3ksyKnSC2UbTbQr4atkVBo");
 
 mod native_mint {
     anchor_lang::declare_id!("So11111111111111111111111111111111111111112");

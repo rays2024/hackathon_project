@@ -5,7 +5,7 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-token_pool = "2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU"
+token_pool = "3JMqhHBkh9vFciBjzMAy9x3ksyKnSC2UbTbQr4atkVBo"
 
 [registry]
 url = "https://api.apr.dev"
@@ -22,5 +22,8 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/logic/index.ts"
+test_step1 = "cross-env step=1 yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/logic/index.ts"
+test_step2 = "cross-env step=2 yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/logic/index.ts"
+test_step3 = "cross-env step=3 yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/logic/index.ts"
 build = "anchor build"
 reTest = "anchor deploy && anchor run test"

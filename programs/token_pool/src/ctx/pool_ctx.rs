@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{Mint, Token, TokenAccount},
+    token_2022::Token2022,
+    token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
 use crate::{
@@ -19,13 +20,13 @@ pub struct InitializeWithSPLToken<'info> {
     pub conf: Box<Account<'info, Conf>>,
 
     #[account()]
-    pub token_mint: Box<Account<'info, Mint>>,
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
 
-    #[account(init, payer = admin, seeds=[PROGRAM_TOKEN_SEED.as_bytes(), token_mint.key().as_ref()], bump, token::mint = token_mint, token::authority = conf)]
-    pub pool_token: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = admin, seeds=[PROGRAM_TOKEN_SEED.as_bytes(), token_mint.key().as_ref()], bump, token::mint = token_mint, token::authority = conf, token::token_program = token_program)]
+    pub pool_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -37,16 +38,16 @@ pub struct InitializeRewards<'info> {
     pub conf: Account<'info, Conf>,
 
     #[account()]
-    pub rewards_token_mint: Box<Account<'info, Mint>>,
+    pub rewards_token_mint: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(init, payer = admin, space = RewardsConf::LEN, seeds = [REWARDS_CONF_SEED.as_bytes()], bump)]
     pub rewards_conf: Box<Account<'info, RewardsConf>>,
 
-    #[account(init, payer = admin, seeds=[REWARDS_TOKEN_SEED.as_bytes(), rewards_token_mint.key().as_ref()], bump, token::mint = rewards_token_mint, token::authority = conf)]
-    pub rewards_token: Box<Account<'info, TokenAccount>>,
+    #[account(init, payer = admin, seeds=[REWARDS_TOKEN_SEED.as_bytes(), rewards_token_mint.key().as_ref()], bump, token::mint = rewards_token_mint, token::authority = conf, token::token_program = token_program)]
+    pub rewards_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -80,7 +81,7 @@ pub struct StakeNativeToken<'info> {
     pub program_sol_wallet: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -98,14 +99,14 @@ pub struct StakeSplToken<'info> {
     #[account(seeds = [CONF_SEED.as_bytes()], bump)]
     pub conf: Account<'info, Conf>,
 
-    #[account(mut, associated_token::mint = conf.token_mint, associated_token::authority = user)]
-    pub user_ata_token: Account<'info, TokenAccount>,
+    #[account(mut, associated_token::mint = conf.token_mint, associated_token::authority = user, associated_token::token_program = token_program)]
+    pub user_ata_token: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut, seeds=[PROGRAM_TOKEN_SEED.as_bytes(), conf.token_mint.as_ref()], bump)]
-    pub pool_token: Account<'info, TokenAccount>,
+    pub pool_token: InterfaceAccount<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -118,26 +119,26 @@ pub struct TransferToRewardsPool<'info> {
     pub conf: Account<'info, Conf>,
 
     #[account(mut, seeds=[PROGRAM_TOKEN_SEED.as_bytes(), conf.token_mint.as_ref()], bump)]
-    pub pool_token: Account<'info, TokenAccount>,
+    pub pool_token: InterfaceAccount<'info, TokenAccount>,
 
     /// CHECK:
     #[account(mut, seeds = [PROGRAM_SOL_WALLET_SEED.as_bytes()], bump)]
     pub program_sol_wallet: AccountInfo<'info>,
 
     #[account(address = conf.token_mint)]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(mut,  seeds = [REWARDS_CONF_SEED.as_bytes()], bump)]
     pub rewards_conf: Box<Account<'info, RewardsConf>>,
 
     #[account(mut, seeds=[REWARDS_TOKEN_SEED.as_bytes(), token_mint.key().as_ref()], bump)]
-    pub rewards_token: Box<Account<'info, TokenAccount>>,
+    pub rewards_token: Box<InterfaceAccount<'info, TokenAccount>>,
     /// CHECK:
     #[account(mut, seeds = [REWARDS_SOL_WALLET_SEED.as_bytes()], bump)]
     pub rewards_sol_wallet: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
@@ -159,16 +160,16 @@ pub struct Withdraw<'info> {
     pub program_sol_wallet: AccountInfo<'info>,
 
     #[account(address = conf.token_mint)]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: InterfaceAccount<'info, Mint>,
 
     /// for sol token just create a empty ata account for user if it doesn't exist
-    #[account(init_if_needed, payer=user, associated_token::mint = token_mint, associated_token::authority = user)]
-    pub user_ata_token: Account<'info, TokenAccount>,
+    #[account(init_if_needed, payer=user, associated_token::mint = token_mint, associated_token::authority = user, associated_token::token_program = token_program)]
+    pub user_ata_token: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut, seeds=[PROGRAM_TOKEN_SEED.as_bytes(), conf.token_mint.as_ref()], bump)]
-    pub pool_token: Account<'info, TokenAccount>,
+    pub pool_token: InterfaceAccount<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
@@ -191,20 +192,20 @@ pub struct ClaimRewards<'info> {
     pub rewards_sol_wallet: AccountInfo<'info>,
 
     #[account(address = conf.token_mint)]
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: InterfaceAccount<'info, Mint>,
 
     /// for sol token just create a empty ata account for user if it doesn't exist
-    #[account(init_if_needed, payer=user, associated_token::mint = token_mint, associated_token::authority = user)]
-    pub user_ata_token: Account<'info, TokenAccount>,
+    #[account(init_if_needed, payer=user, associated_token::mint = token_mint, associated_token::authority = user, associated_token::token_program = token_program)]
+    pub user_ata_token: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut, seeds = [REWARDS_CONF_SEED.as_bytes()], bump)]
     pub rewards_conf: Account<'info, RewardsConf>,
 
     #[account(mut, seeds=[REWARDS_TOKEN_SEED.as_bytes(), rewards_conf.token_mint.as_ref()], bump)]
-    pub rewards_token: Account<'info, TokenAccount>,
+    pub rewards_token: InterfaceAccount<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 /*

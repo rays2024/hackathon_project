@@ -2,8 +2,7 @@ import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import * as Token from "@solana/spl-token";
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import TokenPool from "../../target/idl/token_pool.json";
-import { IDL, TokenPool as ProgramType } from "../../target/types/token_pool";
+import { IDL } from "../../target/types/token_pool";
 import { PROGRAM_TOKEN_SEED, REWARDS_TOKEN_SEED } from "../const";
 import * as util from "./util";
 
@@ -219,6 +218,8 @@ async function create_outside_token(creator: Keypair, mint: Keypair, mintAmount:
 
 async function init_spl_or_native_program(initType: number) {
   log_title("init_program")
+
+
   let conf = PublicKey.findProgramAddressSync([Buffer.from("conf")], program.programId)[0]
 
 
@@ -255,13 +256,26 @@ async function init_spl_or_native_program(initType: number) {
 
   await confirmTx(tx)
 
+  let rewardsConf = PublicKey.findProgramAddressSync([Buffer.from("rewards_conf")], program.programId)[0]
+  let rewardsToken = PublicKey.findProgramAddressSync([Buffer.from("rewards_token"), tokenMint.toBuffer()], program.programId)[0]
 
   let tx1 = await program.methods.initializeWithRewards().accounts({
     admin: admin.publicKey,
+    conf: conf,
     rewardsTokenMint: tokenMint,
+    rewardsConf: rewardsConf,
+    rewardsToken: rewardsToken,
+    tokenProgram: TOKEN_2022_PROGRAM_ID,
+    systemProgram: SystemProgram.programId,
   }).signers([admin]).rpc({ skipPreflight });
 
   await confirmTx(tx1)
+  console.log("rewardsToken", rewardsToken.toString());
+  let admin_ata_token = getAssociatedTokenAddressSync(tokenMint, admin.publicKey, true, TOKEN_2022_PROGRAM_ID);
+  let tx0 = await Token.transfer(provider.connection, admin, admin_ata_token, rewardsToken, admin, BigInt(10000 * 10 ** 9), [], { skipPreflight: true }, TOKEN_2022_PROGRAM_ID);
+  await confirmTx(tx0);
+
+
 
 }
 
@@ -335,17 +349,17 @@ async function stake_spl_token(amount = (BigInt(10) * BigInt(10 ** 9)).toString(
   let stakeAccount = PublicKey.findProgramAddressSync([Buffer.from("stake"), user.publicKey.toBuffer()], program.programId)[0]
   let admin = get_admin();
   // prepare spl token for user
-  let admin_ata_token = getAssociatedTokenAddressSync(tokenMintKP.publicKey, admin.publicKey);
-  let userAtaToken = getAssociatedTokenAddressSync(tokenMintKP.publicKey, user.publicKey);
+  let admin_ata_token = getAssociatedTokenAddressSync(tokenMintKP.publicKey, admin.publicKey, true, TOKEN_2022_PROGRAM_ID);
+  let userAtaToken = getAssociatedTokenAddressSync(tokenMintKP.publicKey, user.publicKey, true, TOKEN_2022_PROGRAM_ID);
   if ((await provider.connection.getAccountInfo(userAtaToken)) == null) {
-    await Token.createAssociatedTokenAccount(provider.connection, user, tokenMintKP.publicKey, user.publicKey);
+    await Token.createAssociatedTokenAccount(provider.connection, user, tokenMintKP.publicKey, user.publicKey, undefined, TOKEN_2022_PROGRAM_ID);
   }
-  let tx0 = await Token.transfer(provider.connection, admin, admin_ata_token, userAtaToken, admin, BigInt(amount), [], { skipPreflight: true });
+  let tx0 = await Token.transfer(provider.connection, admin, admin_ata_token, userAtaToken, admin, BigInt(amount), [], { skipPreflight: true }, TOKEN_2022_PROGRAM_ID);
   await confirmTx(tx0);
   console.log("user ata address", userAtaToken.toString())
-  let userAtaTokenBefore = await Token.getAccount(provider.connection, userAtaToken);
+  let userAtaTokenBefore = await Token.getAccount(provider.connection, userAtaToken, undefined, TOKEN_2022_PROGRAM_ID);
   console.log("userAtaTokenBefore amount: ", userAtaTokenBefore.amount);
-  let poolTokenBefore = await Token.getAccount(provider.connection, poolToken);
+  let poolTokenBefore = await Token.getAccount(provider.connection, poolToken, undefined, TOKEN_2022_PROGRAM_ID);
   console.log("poolTokenBefore amount: ", poolTokenBefore.amount);
 
   if ((await provider.connection.getAccountInfo(stakeAccount)) !== null) {
@@ -354,19 +368,27 @@ async function stake_spl_token(amount = (BigInt(10) * BigInt(10 ** 9)).toString(
     );
     console.log("stakeAccountDataBefore.stakeAmount : ", stakeAccountDataBefore.stakeAmount.toString());
   }
+
+
   // stake spl token
   let tx = await program.methods.stakeSplToken(new BN(amount))
     .accounts({
       user: user.publicKey,
       backendAuthority: backendAuthority.publicKey,
+      conf: conf,
+      poolToken: poolToken,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      stakeAccount: stakeAccount,
+      userAtaToken: userAtaToken,
     })
     .signers([user, backendAuthority])
     .rpc({ skipPreflight });
   await confirmTx(tx)
 
-  let userAtaTokenAfter = await Token.getAccount(provider.connection, userAtaToken);
+  let userAtaTokenAfter = await Token.getAccount(provider.connection, userAtaToken, undefined, TOKEN_2022_PROGRAM_ID);
   console.log("userAtaTokenAfter amount: ", userAtaTokenAfter.amount);
-  let poolTokenAfter = await Token.getAccount(provider.connection, poolToken);
+  let poolTokenAfter = await Token.getAccount(provider.connection, poolToken, undefined, TOKEN_2022_PROGRAM_ID);
   console.log("poolTokenAfter amount: ", poolTokenAfter.amount);
   const stakeAccountDataAfter = await program.account.stakeAccount.fetch(
     stakeAccount.toBase58()
@@ -388,10 +410,23 @@ async function withdraw_spl_or_native_token(amount = (BigInt(1) * BigInt(10 ** 9
   console.log("stakeAccountDataBefore.stakeAmount : ", stakeAccountDataBefore.stakeAmount.toString());
   console.log("stakeAccountDataBefore.withdrawAmount : ", stakeAccountDataBefore.withdrawAmount.toString());
 
+  let conf = PublicKey.findProgramAddressSync([Buffer.from("conf")], program.programId)[0];
+  let poolToken = PublicKey.findProgramAddressSync([Buffer.from("program_token_seed"), tokenMint.toBuffer()], program.programId)[0];
+  let userAtaToken = getAssociatedTokenAddressSync(tokenMint, user.publicKey, true, TOKEN_2022_PROGRAM_ID);
+  let programSolWallet = PublicKey.findProgramAddressSync([Buffer.from("program_sol_wallet")], program.programId)[0];
+
   let tx = await program.methods.withdraw(new BN(amount.toString())).accounts({
     user: user.publicKey,
     backendAuthority: backendAuthority.publicKey,
-    tokenMint: tokenMint
+    tokenMint: tokenMint,
+    conf,
+    poolToken,
+    systemProgram: SystemProgram.programId,
+    tokenProgram: TOKEN_2022_PROGRAM_ID,
+    stakeAccount,
+    userAtaToken,
+    programSolWallet,
+    associatedTokenProgram: Token.ASSOCIATED_TOKEN_PROGRAM_ID
   }).signers([user, backendAuthority]).rpc({ skipPreflight });
 
   await confirmTx(tx)
@@ -407,10 +442,24 @@ async function claimRewards(amount) {
   let user = get_user();
   let backendAuthority = get_backend_authority();
 
+  let conf = PublicKey.findProgramAddressSync([Buffer.from("conf")], program.programId)[0];
+  let userAtaToken = getAssociatedTokenAddressSync(tokenMint, user.publicKey, true, TOKEN_2022_PROGRAM_ID);
+  let rewardsConf = PublicKey.findProgramAddressSync([Buffer.from("rewards_conf")], program.programId)[0]
+  let rewardsToken = PublicKey.findProgramAddressSync([Buffer.from("rewards_token"), tokenMint.toBuffer()], program.programId)[0]
+  let rewardsSolWallet = PublicKey.findProgramAddressSync([Buffer.from("rewards_sol_wallet")], program.programId)[0]
+
   let tx = await program.methods.claimRewards(new BN(amount.toString())).accounts({
     user: user.publicKey,
     backendAuthority: backendAuthority.publicKey,
-    tokenMint: tokenMint
+    tokenMint: tokenMint,
+    conf,
+    systemProgram: SystemProgram.programId,
+    tokenProgram: TOKEN_2022_PROGRAM_ID,
+    userAtaToken,
+    associatedTokenProgram: Token.ASSOCIATED_TOKEN_PROGRAM_ID,
+    rewardsConf,
+    rewardsToken,
+    rewardsSolWallet,
   }).signers([user, backendAuthority]).rpc({ skipPreflight });
 
   await confirmTx(tx)
@@ -428,21 +477,21 @@ async function claim_rewards_spl_or_native_token(amount = (BigInt(1) * BigInt(10
   if (initType == 0) {
     let rewards_spl_mint = get_rewards_spl_mint();
     let rewardsToken = PublicKey.findProgramAddressSync([Buffer.from("rewards_token"), rewards_spl_mint.publicKey.toBuffer()], program.programId)[0];
-    let userAtaToken = getAssociatedTokenAddressSync(rewards_spl_mint.publicKey, user.publicKey);
+    let userAtaToken = getAssociatedTokenAddressSync(rewards_spl_mint.publicKey, user.publicKey, true, TOKEN_2022_PROGRAM_ID);
     // prepare spl token for rewards
-    let admin_ata_token = getAssociatedTokenAddressSync(rewards_spl_mint.publicKey, admin.publicKey);
-    let tx0 = await Token.transfer(provider.connection, admin, admin_ata_token, rewardsToken, admin, BigInt(10 ** 9), [], { skipPreflight: true });
+    let admin_ata_token = getAssociatedTokenAddressSync(rewards_spl_mint.publicKey, admin.publicKey, true, TOKEN_2022_PROGRAM_ID);
+    let tx0 = await Token.transfer(provider.connection, admin, admin_ata_token, rewardsToken, admin, BigInt(10 ** 9), [], { skipPreflight: true }, TOKEN_2022_PROGRAM_ID);
     await confirmTx(tx0);
     // read token account before
-    let rewardsTokenBefore = await Token.getAccount(provider.connection, rewardsToken);
+    let rewardsTokenBefore = await Token.getAccount(provider.connection, rewardsToken, undefined, TOKEN_2022_PROGRAM_ID);
     console.log("rewardsTokenBefore amount: ", rewardsTokenBefore.amount);
-    let userAtaTokenBefore = await Token.getAccount(provider.connection, userAtaToken);
+    let userAtaTokenBefore = await Token.getAccount(provider.connection, userAtaToken, undefined, TOKEN_2022_PROGRAM_ID);
     console.log("userAtaTokenBefore amount: ", userAtaTokenBefore.amount);
     await claimRewards(amount);
     // read token account after
-    let rewardsTokenAfter = await Token.getAccount(provider.connection, rewardsToken);
+    let rewardsTokenAfter = await Token.getAccount(provider.connection, rewardsToken, undefined, TOKEN_2022_PROGRAM_ID);
     console.log("rewardsTokenAfter amount: ", rewardsTokenAfter.amount);
-    let userAtaTokenAfter = await Token.getAccount(provider.connection, userAtaToken);
+    let userAtaTokenAfter = await Token.getAccount(provider.connection, userAtaToken, undefined, TOKEN_2022_PROGRAM_ID);
     console.log("userAtaTokenAfter amount: ", userAtaTokenAfter.amount);
   } else {
     // transfer sol from admin to reward wallet
@@ -556,9 +605,10 @@ async function transfer_to_rewards_spl_or_native_token(amount = (BigInt(1) * Big
   }
 }
 
-describe("test contract", () => {
+(async () => {
 
-  it("print info", async () => {
+  let step = process.env.step;
+  {
     let admin = get_admin()
     let backend_authority = get_backend_authority()
     let user = get_user()
@@ -580,7 +630,7 @@ describe("test contract", () => {
     console.log("rewards_spl_wallet: ", rewards_spl_wallet.toString())
     console.log("program_sol_wallet: ", program_sol_wallet.toString())
     console.log("rewards_sol_wallet: ", rewards_sol_wallet.toString())
-  })
+  }
 
   // it("transfer sol to accounts", async () => {
   //   // return;
@@ -593,22 +643,30 @@ describe("test contract", () => {
   //   // console.log("transfer sol tx: ", tx_sign)
   // })
 
-  it("initialize", async () => {
+  if (step == '1') {
+    console.log("init_spl_or_native_program")
     await init_spl_or_native_program(initType);
-  })
+  }
 
   // it("initialize", async () => {
   //   await changeConf();
   // })
-
-  // it("stake_spl_or_native_token", async () => {
-  //   if (initType == 0) {
-  //     await stake_spl_token();
-  //   } else {
-  //     await stake_native_token();
-  //   }
-  // })
-
+  if (step == '2') {
+    console.log("stake_spl_or_native_token")
+    if (initType == 0) {
+      await stake_spl_token();
+    } else {
+      await stake_native_token();
+    }
+  }
+  if (step == '3') {
+    console.log("withdraw_spl_or_native_token")
+    await withdraw_spl_or_native_token();
+  }
+  if (step == '4') {
+    console.log("claim_rewards_spl_or_native_token")
+    await claim_rewards_spl_or_native_token();
+  }
   // it("withdraw_spl_or_native_token", async () => {
   //   await withdraw_spl_or_native_token();
   // })
@@ -620,4 +678,4 @@ describe("test contract", () => {
   // it("transfer_to_rewards_spl_or_native_token", async () => {
   //   await transfer_to_rewards_spl_or_native_token();
   // })
-})  
+})();

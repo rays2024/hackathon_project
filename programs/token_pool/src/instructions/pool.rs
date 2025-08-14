@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, system_program};
-use anchor_spl::token::{self};
+use anchor_spl::token_interface::{self, TokenInterface};
 
 use crate::{
     ctx::{
@@ -101,10 +101,10 @@ pub fn stake_spl_token_handler(ctx: Context<StakeSplToken>, amount: u64) -> Resu
     let init_type = ctx.accounts.conf.init_type;
     require!(init_type == 0, CustomError::NotSplToken);
 
-    token::transfer(
+    token_interface::transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
-            token::Transfer {
+            token_interface::Transfer {
                 from: ctx.accounts.user_ata_token.to_account_info(),
                 to: ctx.accounts.pool_token.to_account_info(),
                 authority: ctx.accounts.user.to_account_info(),
@@ -132,10 +132,10 @@ pub fn transfer_to_rewards_handler(ctx: Context<TransferToRewardsPool>, amount: 
 
     let init_type = ctx.accounts.conf.init_type;
     if init_type == 0 {
-        token::transfer(
+        token_interface::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
+                token_interface::Transfer {
                     from: ctx.accounts.pool_token.to_account_info(),
                     to: ctx.accounts.rewards_token.to_account_info(),
                     authority: ctx.accounts.conf.to_account_info(),
@@ -177,10 +177,10 @@ pub fn withdraw_token_handler(ctx: Context<Withdraw>, amount: u64) -> Result<()>
     let user = ctx.accounts.user.key();
     let init_type = ctx.accounts.conf.init_type;
     if init_type == 0 {
-        token::transfer(
+        token_interface::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
+                token_interface::Transfer {
                     from: ctx.accounts.pool_token.to_account_info(),
                     to: ctx.accounts.user_ata_token.to_account_info(),
                     authority: ctx.accounts.conf.to_account_info(),
@@ -224,10 +224,10 @@ pub fn claim_rewards_handler(ctx: Context<ClaimRewards>, amount: u64) -> Result<
     let user = ctx.accounts.user.key();
     let init_type = ctx.accounts.conf.init_type;
     if init_type == 0 {
-        token::transfer(
+        token_interface::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
+                token_interface::Transfer {
                     from: ctx.accounts.rewards_token.to_account_info(),
                     to: ctx.accounts.user_ata_token.to_account_info(),
                     authority: ctx.accounts.conf.to_account_info(),
