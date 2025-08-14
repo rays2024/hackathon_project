@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Pool Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .user-menu {
+            background: #2d3748;
+            border: none;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #2d3748;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            background: #4a5568;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        .input-field::placeholder {
+            color: #a0aec0;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .secondary-button {
+            background: #4a5568;
+            color: white;
+        }
+
+        .secondary-button:hover {
+            background: #5a6778;
+            transform: translateY(-2px);
+        }
+
+        .info-text {
+            text-align: center;
+            margin-top: 15px;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        .stats-list {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .stats-item:last-child {
+            border-bottom: none;
+        }
+
+        .stats-label {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .stats-value {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .footer-icon {
+            width: 24px;
+            height: 24px;
+            background: #4a5568;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">Token Pool</div>
+        <button class="user-menu">
+            <span>连接钱包</span>
+            <span>🔗</span>
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">🔥</div>
+                <h2 class="card-title">自动挖矿</h2>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">每笔交易费用</label>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="color: #a0aec0;">0.001 SOL</span>
+                    <span style="color: #ff6b35;">🔥</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">投资金额</label>
+                <input type="text" class="input-field" placeholder="输入 SOL 数量">
+            </div>
+
+            <button class="action-button primary-button">
+                <span>开始挖矿</span>
+                <span>🚀</span>
+            </button>
+
+            <div class="info-text">适合长期投资者</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">数据面板</h2>
+            </div>
+
+            <ul class="stats-list">
+                <li class="stats-item">
+                    <span class="stats-label">待处理</span>
+                    <span class="stats-value">30 笔交易</span>
+                </li>
+                <li class="stats-item">
+                    <span class="stats-label">总收益</span>
+                    <span class="stats-value">90 SOL</span>
+                </li>
+                <li class="stats-item">
+                    <span class="stats-label">年化收益率</span>
+                    <span class="stats-value">15.6%</span>
+                </li>
+            </ul>
+
+            <button class="action-button secondary-button">
+                <span>查看详情</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>流动性池</span>
+        <div class="footer-icon">📁</div>
+    </div>
+</body>
+
+</html>
