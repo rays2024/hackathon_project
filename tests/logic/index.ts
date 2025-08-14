@@ -1,11 +1,11 @@
 import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import * as Token from "@solana/spl-token";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import TokenPool from "../../target/idl/token_pool.json";
 import { TokenPool as ProgramType } from "../../target/types/token_pool";
-import * as util from "./util";
 import { PROGRAM_TOKEN_SEED, REWARDS_TOKEN_SEED } from "../const";
+import * as util from "./util";
 
 // const network = 'https://api.devnet.solana.com'
 // const network = 'https://skilled-wiser-surf.solana-devnet.quiknode.pro/a45e6f5edd1624fe8121f52ade0ce664db153dd4'
@@ -25,11 +25,11 @@ const provider = new AnchorProvider(
     preflightCommitment: "processed"
   }
 )
+const programId = new PublicKey('2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU')
 
-
-const program = new Program(TokenPool as ProgramType, provider)
+const program = new Program(TokenPool as ProgramType, programId, provider)
 const skipPreflight = false;
-const initType: number = 0;
+const initType: number = 0; // 0 spl token, 1 native token
 
 // let uri = "https://madlads.s3.us-west-2.amazonaws.com/json/9967.json"
 // let uri = "https://bafkreiby4o5gibvgkjzg27l4vwvisg5cwhh42oqh4d6hfit2sx5jfkqyee.ipfs.nftstorage.link/"
@@ -199,19 +199,19 @@ async function create_outside_token(creator: Keypair, mint: Keypair, mintAmount:
   console.log("account", account);
   if (account == null) {
     console.log("create a mint");
-    pubkey = await Token.createMint(provider.connection, payer, payer.publicKey, null, 9, mint);
+    pubkey = await Token.createMint(provider.connection, payer, payer.publicKey, null, 9, mint, undefined, TOKEN_2022_PROGRAM_ID);
   }
   console.log("mint pk:", mint.publicKey.toString());
   // let owner = new PublicKey("56SBSummr3xBt4JzPwCLZosLwe6jR9sWvJYpQ2hjVUMd")
 
-  let ata_token = getAssociatedTokenAddressSync(mint.publicKey, creator.publicKey);
+  let ata_token = getAssociatedTokenAddressSync(mint.publicKey, creator.publicKey, true, TOKEN_2022_PROGRAM_ID);
   console.log("ata address", ata_token.toString())
   if ((await provider.connection.getAccountInfo(ata_token)) == null) {
-    await Token.createAssociatedTokenAccount(provider.connection, payer, mint.publicKey, payer.publicKey)
+    await Token.createAssociatedTokenAccount(provider.connection, payer, mint.publicKey, payer.publicKey, undefined, TOKEN_2022_PROGRAM_ID)
   }
 
   console.log("creator ata token:", ata_token.toString());
-  let tx = await Token.mintTo(provider.connection, payer, mint.publicKey, ata_token, payer, BigInt(10 ** 9) * BigInt(mintAmount))
+  let tx = await Token.mintTo(provider.connection, payer, mint.publicKey, ata_token, payer, BigInt(10 ** 9) * BigInt(mintAmount), undefined, undefined, TOKEN_2022_PROGRAM_ID)
   await confirmTx(tx)
 }
 
