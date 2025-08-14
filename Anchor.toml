@@ -5,7 +5,7 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-token_pool = "A9q48Qrwi9jtbxbm6j35piEGC8mEHN3XUMH1rDHj72pw"
+token_pool = "2NueBFH5VmAM3o9iDyZf1Z5tt7dZZvnXXw6w3rLUWirU"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,7 +16,7 @@ url = "https://api.apr.dev"
 # cluster = "https://solana-devnet.g.alchemy.com/v2/xOw_vw5ZnqjQsPr9ILoZcA98LV5rrGVJ"
 # cluster = "https://devnet.helius-rpc.com/?api-key=0300593e-fad8-43ce-8244-fdeafa72bbcd"
 # cluster = "https://api.testnet.solana.com"
-cluster = "https://api.testnet.sonic.game"
+cluster = "https://api.testnet.v1.sonic.game"
 wallet = "~/.config/solana/id.json"
 
 
