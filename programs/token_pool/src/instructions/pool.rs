@@ -71,6 +71,12 @@ pub fn stake_native_token_handler(ctx: Context<StakeNativeToken>, amount: u64) -
     let init_type = ctx.accounts.conf.init_type;
     require!(init_type == 1, CustomError::NotNativeToken);
 
+    // Mock Chaos staking CPI
+    // Chaos.add_liquidity(ctx, amount)
+
+    // Mock Sega staking CPI
+    // Sega.add_liquidity(ctx, amount)
+
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -100,6 +106,12 @@ pub fn stake_spl_token_handler(ctx: Context<StakeSplToken>, amount: u64) -> Resu
     require!(amount > 0, CustomError::InputAmountIsZero);
     let init_type = ctx.accounts.conf.init_type;
     require!(init_type == 0, CustomError::NotSplToken);
+
+    // Mock Chaos staking CPI
+    // Chaos.add_liquidity(ctx, amount)
+
+    // Mock Sega staking CPI
+    // Sega.add_liquidity(ctx, amount)
 
     token_interface::transfer(
         CpiContext::new(
@@ -174,6 +186,12 @@ pub fn withdraw_token_handler(ctx: Context<Withdraw>, amount: u64) -> Result<()>
         CustomError::NotEnoughStakeAmountForUser
     );
 
+    // Mock Chaos withdraw CPI
+    // Chaos.remove_liquidity(ctx, amount)
+
+    // Mock Sega withdraw CPI
+    // Sega.remove_liquidity(ctx, amount)
+
     let user = ctx.accounts.user.key();
     let init_type = ctx.accounts.conf.init_type;
     if init_type == 0 {
@@ -223,6 +241,13 @@ pub fn claim_rewards_handler(ctx: Context<ClaimRewards>, amount: u64) -> Result<
     // let stake_account = &mut ctx.accounts.stake_account;
     let user = ctx.accounts.user.key();
     let init_type = ctx.accounts.conf.init_type;
+
+    // Mock Chaos harvest CPI
+    // Chaos.harvest(ctx, amount)
+
+    // Mock Sega harvest CPI
+    // Sega.harvest(ctx, amount)
+
     if init_type == 0 {
         token_interface::transfer(
             CpiContext::new(
